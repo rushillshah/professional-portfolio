@@ -1,0 +1,29 @@
+{
+  "name": "rushill-shah---personal-portfolio",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@types/styled-components": "^5.1.34",
+    "framer-motion": "^12.23.6",
+    "lunarphase-js": "^2.0.3",
+    "matter-js": "^0.20.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-icons": "^5.5.0",
+    "react-rainfall": "^0.1.533",
+    "styled-components": "^6.1.19",
+    "suncalc": "^1.9.0"
+  },
+  "devDependencies": {
+    "@types/matter-js": "^0.19.8",
+    "@types/node": "^22.14.0",
+    "typescript": "~5.7.2",
+    "vite": "^6.2.0"
+  }
+}

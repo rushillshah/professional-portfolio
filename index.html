@@ -1,0 +1,57 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rushill Shah - Portfolio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Noto+Serif+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sono:wdth,wght@75..100,200..800&display=swap" rel="stylesheet">
+
+    <link
+  href="https://fonts.googleapis.com/css2?family=Zen+Antique+Soft&display=swap"
+  rel="stylesheet"
+/>
+
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+        heading: ['"Zen Antique Soft"', 'serif'],
+        body:    ['"Zen Antique Soft"', 'serif'],
+      },
+        colors: {
+          'main-text':     'var(--global-text-color)',
+          'sub-text':      'var(--global-subtext-color)',
+          'tertiary-text': 'var(--global-tertiary-color)',
+
+          /* ← NEW: card background color utility */
+          'card-bg':       'var(--global-card-color)',
+
+          sand: { /* … */ },
+          stone:{ /* … */ },
+        }
+      }
+    }
+  }
+</script>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.1.0/",
+    "react": "https://esm.sh/react@^19.1.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.1.0/"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body class="bg-sand-100">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
