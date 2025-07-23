@@ -25,8 +25,8 @@ const RainEffect: React.FC<RainEffectProps> = ({
   // This effect runs only once on mount to set up all audio
   useEffect(() => {
     // Initialize audio objects
-    const rainAudio = new Audio('/assets/rain.mp3');
-    const thunderAudio = new Audio('/assets/thunder.mp3');
+    const rainAudio = new Audio('/public/assets/rain.mp3');
+    const thunderAudio = new Audio('/public/assets/thunder.mp3');
 
     // Configure audio properties
     rainAudio.loop = true;

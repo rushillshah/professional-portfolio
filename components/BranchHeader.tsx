@@ -21,7 +21,7 @@ const BranchImg = styled.img`
 
 const BranchHeader: React.FC = () => (
   <Wrapper>
-    <BranchImg src="/assets/branch.png" alt="Branch decorative header" />
+    <BranchImg src="/public/assets/branch.png" alt="Branch decorative header" />
   </Wrapper>
 );
 

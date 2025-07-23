@@ -8,7 +8,7 @@ const Leaf = styled.div`
   left: 0;
   width: 32px;
   height: 32px;
-  background: url('/assets/leaf.svg') no-repeat center;
+  background: url('/public/assets/leaf.svg') no-repeat center;
   background-size: contain;
   pointer-events: none;
   z-index: 9999;
