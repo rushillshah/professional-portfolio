@@ -11,11 +11,11 @@ const AmbientSounds = () => {
     let audio: HTMLAudioElement | null = null;
 
     if (weather?.kind === 'rain') {
-      audio = new Audio('/public/assets/rain.mp3');
+      audio = new Audio('/assets/rain.mp3');
     } else if (isNight) {
-      audio = new Audio('/public/assets/crickets.mp3');
+      audio = new Audio('/assets/crickets.mp3');
     } else {
-      audio = new Audio('/public/assets/birds.mp3');
+      audio = new Audio('/assets/birds.mp3');
     }
 
     if (audio) {
