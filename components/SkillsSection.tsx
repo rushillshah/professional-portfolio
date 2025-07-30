@@ -155,24 +155,6 @@ const Desc = styled.span`
 
 const groups: { title: string; skills: Skill[] }[] = [
   {
-    title: 'Core',
-skills: [
-  { 
-    name: 'System Design',
-    desc: `Building antifragile Systems for the next million.
-    ` 
-  },
-  { 
-    name: 'Product Building', 
-    desc: `Supplying a demand or manufacturing it`
-  },
-  { 
-    name: 'Interactive UX',
-    desc: `Delight is in the details.`
-  },
-]
-  },
-  {
     title: 'Languages',
     skills: [
       { name: 'Python',           desc: '6 yrs' },
@@ -203,22 +185,14 @@ skills: [
     ],
   },
   {
-    title: 'AI & Search',
+    title: 'Misc',
     skills: [
       { name: 'RAG Systems',      desc: '1 yr' },
       { name: 'Weaviate',         desc: '1 yr' },
       { name: 'Cohere',           desc: '1 yr' },
-      { name: 'Prompt Engineering',           desc: '2 yrs' },
-    ],
-  },
-  {
-    title: 'Testing, Ops & Security',
-    skills: [
-      { name: 'Jest / ExUnit / PyTest', desc: '3 yrs' },
       { name: 'CI/CD',                   desc: '3 yrs' },
       { name: 'Git',                     desc: '8 yrs' },
       { name: 'XSS & CSRF',              desc: '1 yr' },
-      { name: 'Auth & 2FA',              desc: '2 yrs' },
     ],
   },
 ];
