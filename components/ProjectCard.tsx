@@ -1,101 +1,131 @@
-// components/ProjectCard.tsx
-import React from 'react';
+import React, { useRef } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { FiExternalLink } from 'react-icons/fi';
+
+type DayMode = 'day' | 'night';
 
 interface ProjectCardProps {
   title: string;
   summary: string;
   linkUrl?: string;
+  index?: number;
+  mode?: DayMode;
 }
 
-const sway = keyframes`
-  0%,100% { transform: rotate(0deg); }
-  50%     { transform: rotate(1deg); }
+const float = keyframes`
+  from { transform: translateY(0); }
+  50%  { transform: translateY(-2px); }
+  to   { transform: translateY(0); }
 `;
 
-const Card = styled.article`
+const Card = styled.article<{ mode: DayMode }>`
   position: relative;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 2rem;
-  background: rgba(16, 16, 24, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 1rem;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 1rem;
+  padding: 1.25rem 1.25rem 1.1rem;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.15);
   backdrop-filter: blur(8px);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  -webkit-backdrop-filter: blur(8px);
+  background: ${({ mode }) => (mode === 'day' ? 'rgba(255,255,255,0.12)' : 'rgba(16,16,24,0.6)')};
+  transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute; inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(220px 220px at var(--mx, -200px) var(--my, -200px),
+        ${({ mode }) => (mode === 'day' ? 'rgba(255,221,128,.18)' : 'rgba(124,58,237,.18)')} 0%,
+        transparent 60%);
+    opacity: .9;
+    transition: background 120ms ease;
+  }
 
   &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
-    animation: ${sway} 4s ease-in-out infinite;
+    transform: translateY(-2px);
+    box-shadow: 0 14px 34px rgba(0,0,0,.35);
+    border-color: rgba(255,255,255,0.22);
   }
 `;
 
 const TitleBar = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1rem;
+  display: flex; align-items: center; justify-content: space-between;
 `;
 
 const Title = styled.h3`
-  font-family: 'Zen Antique Soft', serif;
-  font-size: 1.75rem;
-  color: var(--global-text-color);
   margin: 0;
-  text-shadow: 0 0 3px rgba(0, 0, 0, 0.6);
-`;
-
-// here’s your IconWrapper:
-const IconWrapper = styled.a`
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--global-tertiary-color);
-  background: transparent;
-  border: none;
-  font-size: 1.25rem;
-  padding: 0.25rem;
-  border-radius: 0.5rem;
-  transition: background 0.2s ease, color 0.2s ease;
-
-  &:hover {
-    background: var(--global-tertiary-color);
-    color: var(--global-card-color);
-  }
+  font-family: 'Sono', sans-serif;
+  font-size: clamp(1.05rem, 1.9vw, 1.2rem);
+  font-weight: 500;
+  letter-spacing: .02em;
+  color: var(--global-text-color);
+  animation: ${float} 6s ease-in-out infinite;
 `;
 
 const Summary = styled.p`
-  font-family: 'Inter', sans-serif;
+  margin: .25rem 0 .25rem;
   color: var(--global-subtext-color);
   line-height: 1.6;
-  margin: 0 0 1.5rem;
-  flex-grow: 1;
+`;
+
+const Visit = styled.a<{ mode: DayMode }>`
+  display: inline-flex; align-items: center; gap: .35rem;
+  padding: .45rem .7rem; border-radius: 10px;
+  font-size: .9rem; text-decoration: none;
+  color: var(--global-text-color);
+  background: ${({ mode }) =>
+    mode === 'day' ? 'rgba(255,255,255,.75)' : 'rgba(255,255,255,.08)'};
+  border: 1px solid rgba(255,255,255,.16);
+  transition: transform .15s ease, background .15s ease, box-shadow .15s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    background: ${({ mode }) =>
+      mode === 'day' ? 'rgba(255,255,255,.9)' : 'rgba(255,255,255,.12)'};
+    box-shadow: 0 8px 18px rgba(0,0,0,.2);
+  }
+`;
+
+const Actions = styled.div`
+  display: flex; align-items: center; justify-content: flex-end; gap: .5rem;
 `;
 
 const ProjectCard: React.FC<ProjectCardProps> = ({
   title,
   summary,
   linkUrl = '#',
-}) => (
-  <Card>
-    <TitleBar>
-      <Title>{title}</Title>
-      <IconWrapper
-        href={linkUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        aria-label={`Visit ${title}`}
-      >
-        <FiExternalLink size="1.25rem" />
-      </IconWrapper>
-    </TitleBar>
+  index = 0,
+  mode = 'night',
+}) => {
+  const cardRef = useRef<HTMLDivElement | null>(null);
 
-    <Summary>{summary}</Summary>
-  </Card>
-);
+  const onMove: React.MouseEventHandler<HTMLDivElement> = (e) => {
+    const el = cardRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    el.style.setProperty('--mx', `${e.clientX - rect.left}px`);
+    el.style.setProperty('--my', `${e.clientY - rect.top}px`);
+  };
+
+  return (
+    <Card ref={cardRef as any} onMouseMove={onMove} mode={mode}>
+
+      <TitleBar>
+        <Title>{title}</Title>
+        <Actions>
+          <Visit href={linkUrl} target="_blank" rel="noopener noreferrer" mode={mode} aria-label={`Visit ${title}`}>
+            <FiExternalLink size="1rem" />
+            <span>Visit</span>
+          </Visit>
+        </Actions>
+      </TitleBar>
+
+      <Summary>{summary}</Summary>
+    </Card>
+  );
+};
 
 export default ProjectCard;

@@ -9,7 +9,7 @@ const AmbientSounds = () => {
 
   useEffect(() => {
     let audio: HTMLAudioElement | null = null;
-
+    console.log('weather kind:', weather?.kind, 'isNight:', isNight);
     if (weather?.kind === 'rain') {
       audio = new Audio('/assets/rain.mp3');
     } else if (isNight) {
