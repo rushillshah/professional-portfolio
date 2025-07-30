@@ -128,7 +128,7 @@ const AboutSection: React.FC = () => {
           <Header mode={mode}>This Site</Header>
           <Text>
             This page is an interactive piece that uses your location as its brush.
-            No two visits are identical. A small statement that effort and care can move a stranger.
+            No two visits are identical. A small statement that effort and care can move a stranger, and that human creativity trumps technology.
             <br /><br />
             Witness the weather, the time of day, and the season of your location influence your experience. 
             <br /><br />
