@@ -78,7 +78,7 @@ const GroupTitle = styled.h3<{ day:boolean; active:boolean }>`
       :'linear-gradient(90deg,#7c3aed,#6ee7ff)'};
     border-radius:2px;
     transform-origin:left;
-    transform:scaleX(${({active})=>active?1:.05});
+    transform:scaleX(${({active})=>active?1:.1});
     opacity:${({active})=>active?.95:.6};
     transition:transform .38s ease,opacity .18s ease;
   }
