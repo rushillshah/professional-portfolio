@@ -279,7 +279,7 @@ const App: React.FC = () => {
         </SideList>
       </Sidebar>
 
-      <AmbientSounds />
+      <AmbientSounds showSnow={showSnow} />
       {showLeaves && <FallingLeaves isFall={effectiveWeather === 'fall'} />}
 
       <DynamicSky manualHour={manualHour} />
@@ -287,7 +287,9 @@ const App: React.FC = () => {
       {showClouds && <CloudLayer />}
       <BranchHeader />
       {showRain && <RainEffect />}
-      {showSnow && <Snowfall density={180} />}
+      {showSnow && (
+        <Snowfall density={180} playing={effectiveWeather === 'snow'} />
+      )}
 
       <SnapContainer ref={containerRef}>
         <SnapSection id="hero"><HeroSection /><ScrollHint /></SnapSection>

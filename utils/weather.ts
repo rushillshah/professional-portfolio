@@ -18,7 +18,6 @@ export async function fetchWeather(
   try {
     const res = await fetch(`${API}?lat=${lat}&lon=${lon}&appid=${KEY}&units=metric`);
     const json = await res.json();
-    console.log('Weather data:', json);
     const main = (json.weather?.[0]?.main || '').toLowerCase();
     const kind: WeatherKind =
       /snow/.test(main)   ? 'snow'   :
