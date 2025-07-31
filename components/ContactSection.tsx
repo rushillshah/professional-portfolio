@@ -1,8 +1,8 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useMemo, useRef, useState, useCallback, useEffect } from 'react';
 import styled from 'styled-components';
 import Section from './Section';
-import { GitHubIcon, LinkedInIcon } from './icons';
-import { FiMail, FiTwitter, FiInstagram } from 'react-icons/fi';
+import { FiArrowLeft, FiArrowRight } from 'react-icons/fi';
+import { PROFESSIONAL, SOCIAL } from '@/constants/contact';
 
 type DayMode = 'day' | 'night';
 type LinkItem = { name: string; desc: string; href: string; Icon: React.ElementType };
@@ -12,16 +12,15 @@ function getModeByHour(h: number): DayMode {
 }
 
 const Shell = styled.div<{ day: boolean }>`
-  max-width: 1100px;
-  margin: 0 auto;
   position: relative;
-  z-index: 3;
-  padding: 1.6rem 0 1rem;
-  border-radius: 1rem;
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.5);
   border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 1rem;
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
-  background: ${({ day }) => (day ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.3)')};
+  overflow: hidden;
+  z-index: 10;
 `;
 
 const Header = styled.header`
@@ -36,7 +35,7 @@ const Title = styled.h2<{ day: boolean }>`
   font-family: 'Sono', sans-serif;
   font-size: clamp(2rem, 3.2vw, 2.5rem);
   font-weight: 500;
-  color: var(--global-text-color);
+  color: white;
 `;
 
 const Ledger = styled.div<{ day: boolean }>`
@@ -45,8 +44,6 @@ const Ledger = styled.div<{ day: boolean }>`
   gap: .75rem;
   --glow: ${({ day }) => (day ? 'rgba(255,221,128,.18)' : 'rgba(124,58,237,.22)')};
   border-radius: 16px;
-  padding: clamp(1rem, 3vw, 2rem);
-  padding-top: 0;
 
   &::before {
     content: '';
@@ -65,13 +62,14 @@ const Group = styled.div`
   border-radius: 12px;
   padding: 1.25rem;
   backdrop-filter: blur(12px);
+  overflow: hidden;
 `;
 
 const GroupTitle = styled.h3<{ day: boolean; active: boolean }>`
   margin: 0;
   font-size: clamp(14px, 2vw, 16px);
   font-weight: 500;
-  color: var(--global-text-color);
+  color: white;
   position: relative;
   display: inline-block;
   padding-bottom: 2px;
@@ -91,11 +89,16 @@ const GroupTitle = styled.h3<{ day: boolean; active: boolean }>`
   }
 `;
 
+const ChipsWrapper = styled.div`
+  position: relative;
+  min-width: 0;
+`;
+
 const Chips = styled.ul`
   --row-h: 44px;
   list-style: none;
   margin: 0;
-  padding: .25rem .25rem;
+  padding: .25rem 0;
   display: flex;
   align-items: center;
   flex-wrap: nowrap;
@@ -105,19 +108,44 @@ const Chips = styled.ul`
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
-  mask-image: linear-gradient(to right, transparent 0, black 12px, black calc(100% - 12px), transparent 100%);
 
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255,255,255,.25) transparent;
-  &::-webkit-scrollbar { height: 8px; }
-  &::-webkit-scrollbar-thumb { background: rgba(255,255,255,.25); border-radius: 8px; }
-  &::-webkit-scrollbar-track { background: transparent; }
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+`;
+
+const ScrollArrow = styled.button<{ show: boolean; direction: 'left' | 'right' }>`
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  transform: translateY(-50%) ${({ show }) => (show ? 'scale(1)' : 'scale(0.5)')};
+  ${({ direction }) => (direction === 'left' ? 'left: -22px;' : 'right: -22px;')}
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.45);
+  border: 1px solid rgba(255,255,255,0.1);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  cursor: pointer;
+  padding: 0;
+  opacity: ${({ show }) => (show ? 1 : 0)};
+  pointer-events: ${({ show }) => (show ? 'auto' : 'none')};
+  transition: all 0.25s ease;
+
+  &:hover {
+    background: rgba(0,0,0,0.6);
+    transform: translateY(-50%) scale(1.05);
+  }
 `;
 
 const LinkChip = styled.a<{ day: boolean }>`
   --desc-max: 0px;
   --desc-opacity: 0;
 
+  flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   height: var(--row-h);
@@ -125,8 +153,8 @@ const LinkChip = styled.a<{ day: boolean }>`
   padding: 0 .8rem;
   font-size: 13px;
   text-decoration: none;
-  color: var(--global-text-color);
-  background: ${({ day }) => (day ? 'rgba(255,255,255,.75)' : 'rgba(255,255,255,.06)')};
+  color: white;
+  background: rgba(0, 0, 0, 0.5);
   border: 1px solid rgba(255,255,255,.12);
   border-radius: 12px;
   backdrop-filter: blur(12px);
@@ -137,7 +165,6 @@ const LinkChip = styled.a<{ day: boolean }>`
   &:hover,
   &:focus-visible {
     transform: translateY(-1px);
-    background: ${({ day }) => (day ? 'rgba(255,255,255,.9)' : 'rgba(255,255,255,.1)')};
     box-shadow: 0 6px 18px rgba(0,0,0,.18);
     --desc-max: 420px;
     --desc-opacity: 1;
@@ -163,16 +190,90 @@ const Desc = styled.span`
   transition: max-width .25s ease, opacity .2s ease;
 `;
 
-const reachOut: LinkItem[] = [
-  { name: 'Email',    desc: 'rushillshah2000@gmail.com', href: 'mailto:rushillshah2000@gmail.com', Icon: FiMail },
-  { name: 'GitHub',   desc: '@rushillshah',               href: 'https://github.com/rushillshah',   Icon: GitHubIcon },
-  { name: 'LinkedIn', desc: 'Find me!',               href: 'https://www.linkedin.com/in/rushill-shah-1889a3145/', Icon: LinkedInIcon },
-];
+interface ScrollingChipsProps {
+  items: LinkItem[];
+  day: boolean;
+}
 
-const elsewhere: LinkItem[] = [
-  { name: 'Twitter',   desc: '@rushillshah',  href: 'https://twitter.com/rushillshah',   Icon: FiTwitter },
-  { name: 'Instagram', desc: '@rushillshah',  href: 'https://instagram.com/rushillshah', Icon: FiInstagram },
-];
+const ScrollingChips: React.FC<ScrollingChipsProps> = ({ items, day }) => {
+  const chipsRef = useRef<HTMLUListElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const checkScrollability = useCallback(() => {
+    const el = chipsRef.current;
+    if (el) {
+      const hasOverflow = el.scrollWidth > el.clientWidth;
+      setCanScrollLeft(hasOverflow && el.scrollLeft > 5);
+      setCanScrollRight(hasOverflow && el.scrollLeft + el.clientWidth < el.scrollWidth - 5);
+    }
+  }, []);
+
+  useEffect(() => {
+    const element = chipsRef.current;
+    if (!element) return;
+    checkScrollability();
+    const resizeObserver = new ResizeObserver(checkScrollability);
+    resizeObserver.observe(element);
+    element.addEventListener('scroll', checkScrollability, { passive: true });
+    return () => {
+      resizeObserver.unobserve(element);
+      element.removeEventListener('scroll', checkScrollability);
+    };
+  }, [items, checkScrollability]);
+
+  const pan = (direction: 'left' | 'right') => {
+    const el = chipsRef.current;
+    if (el) {
+      const panAmount = el.clientWidth * 0.7;
+      el.scrollBy({ left: direction === 'left' ? -panAmount : panAmount, behavior: 'smooth' });
+    }
+  };
+
+  const handleChipHover = (e: React.MouseEvent<HTMLLIElement>) => {
+    const liElement = e.currentTarget;
+    const containerElement = chipsRef.current;
+    if (!liElement || !containerElement) return;
+
+    setTimeout(() => {
+      if (liElement.matches(':hover')) {
+        const chipRightEdge = liElement.offsetLeft + liElement.offsetWidth;
+        const containerVisibleRightEdge = containerElement.scrollLeft + containerElement.clientWidth;
+
+        if (chipRightEdge > containerVisibleRightEdge) {
+          const scrollAmount = chipRightEdge - containerVisibleRightEdge + 15;
+          containerElement.scrollBy({
+            left: scrollAmount,
+            behavior: 'smooth',
+          });
+        }
+      }
+    }, 260);
+  };
+
+  return (
+    <ChipsWrapper>
+      <ScrollArrow show={canScrollLeft} direction="left" onClick={() => pan('left')} aria-label="Scroll left">
+        <FiArrowLeft size={14} />
+      </ScrollArrow>
+      <Chips ref={chipsRef}>
+        {items.map((item) => (
+          <li key={item.name} onMouseEnter={handleChipHover}>
+            <LinkChip day={day} href={item.href} target='_blank' rel="noopener noreferrer">
+              <item.Icon />
+              <Label>{item.name}</Label>
+              <Sep>—</Sep>
+              <Desc>{item.desc}</Desc>
+            </LinkChip>
+          </li>
+        ))}
+      </Chips>
+      <ScrollArrow show={canScrollRight} direction="right" onClick={() => pan('right')} aria-label="Scroll right">
+        <FiArrowRight size={14} />
+      </ScrollArrow>
+    </ChipsWrapper>
+  );
+};
 
 const ContactSection: React.FC = () => {
   const mode = useMemo<DayMode>(() => getModeByHour(new Date().getHours()), []);
@@ -194,7 +295,6 @@ const ContactSection: React.FC = () => {
         <Header>
           <Title day={day}>Contact</Title>
         </Header>
-
         <Ledger ref={ledgerRef} day={day} onMouseMove={onMove}>
           <Group
             onMouseEnter={() => setActiveGroup(0)}
@@ -203,20 +303,8 @@ const ContactSection: React.FC = () => {
             onBlurCapture={() => setActiveGroup(prev => (prev === 0 ? null : prev))}
           >
             <GroupTitle day={day} active={activeGroup === 0}>Professional</GroupTitle>
-            <Chips>
-              {reachOut.map(({ name, desc, href, Icon }) => (
-                <li key={name}>
-                  <LinkChip day={day} href={href} target={href.startsWith('http') ? '_blank' : undefined} rel="noopener noreferrer">
-                    <Icon />
-                    <Label>{name}</Label>
-                    <Sep>—</Sep>
-                    <Desc>{desc}</Desc>
-                  </LinkChip>
-                </li>
-              ))}
-            </Chips>
+            <ScrollingChips items={PROFESSIONAL} day={day} />
           </Group>
-
           <Group
             onMouseEnter={() => setActiveGroup(1)}
             onMouseLeave={() => setActiveGroup(prev => (prev === 1 ? null : prev))}
@@ -224,18 +312,7 @@ const ContactSection: React.FC = () => {
             onBlurCapture={() => setActiveGroup(prev => (prev === 1 ? null : prev))}
           >
             <GroupTitle day={day} active={activeGroup === 1}>Socials</GroupTitle>
-            <Chips>
-              {elsewhere.map(({ name, desc, href, Icon }) => (
-                <li key={name}>
-                  <LinkChip day={day} href={href} target="_blank" rel="noopener noreferrer">
-                    <Icon />
-                    <Label>{name}</Label>
-                    <Sep>—</Sep>
-                    <Desc>{desc}</Desc>
-                  </LinkChip>
-                </li>
-              ))}
-            </Chips>
+            <ScrollingChips items={SOCIAL} day={day} />
           </Group>
         </Ledger>
       </Shell>

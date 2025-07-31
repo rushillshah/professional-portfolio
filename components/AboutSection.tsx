@@ -5,31 +5,24 @@ import Section from './Section';
 type DayMode = 'day' | 'night';
 
 const Glass = styled.div<{ mode: DayMode }>`
-  position: relative;
-  margin: 0 auto;
-  z-index: 3;
-  padding: 2rem 1.5rem;
-  border-radius: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 2rem 2.25rem;
+  background: rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
-  background: ${({ mode }) => (mode === 'day' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.32)')};
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  z-index: 10;
+
+  position: relative;
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 1rem;
+  backdrop-filter: blur(6px);
   overflow: hidden;
-
-  @media (min-width: 768px) { padding: 3rem 2.5rem; }
-
-  /* subtle aurora ribbon */
-  &::before {
-    content: '';
-    position: absolute; inset: -30% -10% auto -10%;
-    height: 40%;
-    background: ${({ mode }) =>
-      mode === 'day'
-        ? 'linear-gradient(90deg, rgba(255,221,128,.25), rgba(255,159,67,.15), rgba(255,221,128,.25))'
-        : 'linear-gradient(90deg, rgba(124,58,237,.22), rgba(110,231,255,.12), rgba(124,58,237,.22))'};
-    filter: blur(30px);
-    pointer-events: none;
-  }
 `;
 
 const Container = styled.div`

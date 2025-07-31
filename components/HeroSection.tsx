@@ -1,7 +1,13 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { GitHubIcon, LinkedInIcon } from './icons';
 import { FiMail } from 'react-icons/fi';
+
+type DayMode = 'day' | 'night';
+
+function getModeByHour(h: number): DayMode {
+  return h >= 6 && h < 18 ? 'day' : 'night';
+}
 
 const Header = styled.header`
   position: relative;
@@ -31,7 +37,7 @@ const Glass = styled.div`
 
   position: relative;
   padding: 1.5rem;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.5);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 1rem;
   backdrop-filter: blur(6px);
@@ -46,7 +52,7 @@ const NameBlock = styled(Glass)`
   @media (max-width: 767px) {
     position: static;
     transform: none;
-    width: min(400px, 88%);   /* content width clamp */
+    width: min(400px, 88%);
     text-align: center;
     margin: 0 auto;
     padding: 1rem .9rem;
@@ -75,14 +81,14 @@ const IconsBlock = styled(Glass)`
   }
 `;
 
-const Title = styled.h1`
+const Title = styled.h1<{ day: boolean }>`
   font-family: 'Sono', sans-serif;
   font-size: clamp(2rem, 3.6vw, 2.75rem);
   font-weight: 300;
   letter-spacing: 1px;
   line-height: 1.15;
   margin: 0;
-  color: var(--global-text-color);
+  color: white;
   display: inline-block;
   position: relative;
   padding-bottom: 8px;
@@ -90,20 +96,21 @@ const Title = styled.h1`
   &::after{
     content:'';
     position:absolute; left:0; bottom:0; height:2px; width:100%;
-    background: linear-gradient(90deg, #7c3aed, #6ee7ff);
+    background: ${({ day }) =>
+      day
+        ? 'linear-gradient(90deg,#ffdd80,#ff9f43)'
+        : 'linear-gradient(90deg,#7c3aed,#6ee7ff)'};
     border-radius: 2px;
     transform: scaleX(1);
     transform-origin: left;
     opacity: .9;
     transition: transform .18s ease;
   }
-  &:hover::after{ transform: scaleX(1); }
 
   @media (max-width: 767px) {
     font-size: clamp(1.65rem, 7vw, 2.1rem);
     line-height: 1.2;
 
-    /* underline centered & shorter to feel balanced in the card width */
     &::after{
       left: 50%;
       width: 64%;
@@ -116,7 +123,7 @@ const Title = styled.h1`
 
 const Subtitle = styled.p`
   font-size: 1rem;
-  color: var(--global-subtext-color);
+  color: white;
   letter-spacing: 0.02em;
   margin: 0;
 
@@ -137,7 +144,7 @@ const IconRow = styled.div`
   gap: 1rem;
 
   @media (max-width: 767px) {
-    width: 100%;                 /* align to the same card width */
+    width: 100%;
     gap: .75rem;
     justify-content: center;
     flex-wrap: wrap;
@@ -145,7 +152,7 @@ const IconRow = styled.div`
 `;
 
 const IconLink = styled.a`
-  color: var(--global-tertiary-color);
+  color: lightgrey;
   transition: color 0.25s ease;
   display: inline-flex;
   align-items: center;
@@ -154,7 +161,7 @@ const IconLink = styled.a`
   svg { width: 1.75rem; height: 1.75rem; }
 
   &:hover {
-    color: var(--global-text-color);
+    color: white;
     svg { animation: ${sway} 3s ease-in-out infinite; }
   }
 
@@ -172,27 +179,44 @@ const IconLink = styled.a`
   }
 `;
 
-const HeroSection: React.FC = () => (
-  <Header>
-    <NameBlock>
-      <Title>Rushill Shah</Title>
-      <Subtitle>UIUC | Candidate.ly | CodeWiser</Subtitle>
-    </NameBlock>
+type Props = { mode?: DayMode };
 
-    <IconsBlock>
-      <IconRow>
-        <IconLink href="mailto:rushillshah2000@gmail.com" aria-label="Email">
-          <FiMail />
-        </IconLink>
-        <IconLink href="https://github.com/rushillshah" aria-label="GitHub">
-          <GitHubIcon />
-        </IconLink>
-        <IconLink href="https://linkedin.com/in/yourname" aria-label="LinkedIn">
-          <LinkedInIcon />
-        </IconLink>
-      </IconRow>
-    </IconsBlock>
-  </Header>
-);
+const HeroSection: React.FC<Props> = ({ mode }) => {
+  const resolvedMode = useMemo<DayMode>(() => mode ?? getModeByHour(new Date().getHours()), [mode]);
+  const day = resolvedMode === 'day';
+
+  return (
+    <Header>
+      <NameBlock>
+        <Title day={day}>Rushill Shah</Title>
+        <Subtitle>UIUC | Candidate.ly | CodeWiser</Subtitle>
+      </NameBlock>
+
+      <IconsBlock>
+        <IconRow>
+          <IconLink href="mailto:rushillshah2000@gmail.com" aria-label="Email">
+            <FiMail />
+          </IconLink>
+          <IconLink
+            href="https://github.com/rushillshah"
+            aria-label="GitHub"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <GitHubIcon />
+          </IconLink>
+          <IconLink
+            href="https://www.linkedin.com/in/rushill-shah-1889a3145/"
+            aria-label="LinkedIn"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <LinkedInIcon />
+          </IconLink>
+        </IconRow>
+      </IconsBlock>
+    </Header>
+  );
+};
 
 export default HeroSection;

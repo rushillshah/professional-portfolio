@@ -1,4 +1,3 @@
-// components/Section.tsx
 import React from 'react'
 import styled from 'styled-components'
 
@@ -6,7 +5,6 @@ interface SectionProps {
   children: React.ReactNode
 }
 
-// Outer wrapper replicating `w-full py-16 sm:py-24`
 const SectionWrapper = styled.section`
   width: 100%;
   padding: 4rem 0;
@@ -15,7 +13,6 @@ const SectionWrapper = styled.section`
   }
 `
 
-// Content container replicating `max-w-4xl mx-auto px-6 lg:px-8`
 const SectionContent = styled.div`
   max-width: 90%;
   margin-left: auto;

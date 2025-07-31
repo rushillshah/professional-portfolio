@@ -37,7 +37,7 @@ const Pill = styled.button`
 
 
   position: relative;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.5);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 1rem;
   backdrop-filter: blur(6px);

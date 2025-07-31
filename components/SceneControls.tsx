@@ -14,7 +14,7 @@ const Panel = styled.div<{ day: boolean; open: boolean }>`
   height: ${({ open }) => (open ? 'calc(46px + var(--body-h, 0px))' : '46px')};
   border-radius: var(--radius);
   border: 1px solid rgba(255,255,255,.15);
-  background: rgba(0,0,0,.35);
+  background: rgba(0,0,0,.5);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   overflow: hidden;
@@ -45,7 +45,7 @@ const Gear = styled.button`
 
 const HeadTitle = styled.span`
   font: 600 0.95rem/1 'Sono', sans-serif;
-  color: var(--global-text-color);
+  color: white;
   opacity: .9;
 `;
 
@@ -116,10 +116,11 @@ const Chips = styled.div`display:flex;gap:.5rem;flex-wrap:wrap;`;
 
 const Chip = styled.button<{ active: boolean }>`
   appearance:none;border:0;margin:0;font:600 .8rem/1 'Sono',sans-serif;
-  padding:.4rem .6rem;border-radius:10px;color:var(--global-text-color);
-  background:none;border:1px solid rgba(255,255,255,.12);cursor:pointer;
+  padding:.4rem .6rem;border-radius:10px;color:white;
+  background:rgba(0, 0, 0, 0.5);border:1px solid rgba(255,255,255,.12);cursor:pointer;
+  
   transition: transform .12s ease, background .12s ease, box-shadow .12s ease, border-color .12s ease;
-  ${({ active }) => active && `box-shadow: 0 6px 18px rgba(0,0,0,.22); border-color: rgba(255,255,255,.92);`}
+  ${({ active }) => active && `box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5); border-color: rgba(255,255,255,.92);`}
   &:hover{ transform: translateY(-1px); }
 `;
 

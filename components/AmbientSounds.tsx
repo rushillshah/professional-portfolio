@@ -5,11 +5,10 @@ import { useCelestialPosition } from '@/hooks/celestialPosition';
 const AmbientSounds = () => {
   const weather = useWeather();
   const celestial = useCelestialPosition();
-  const isNight = celestial.visible !== 'sun';
+  const isNight = celestial.timeOfDay !== 'day';
 
   useEffect(() => {
     let audio: HTMLAudioElement | null = null;
-    console.log('weather kind:', weather?.kind, 'isNight:', isNight);
     if (weather?.kind === 'rain') {
       audio = new Audio('/assets/rain.mp3');
     } else if (isNight) {
