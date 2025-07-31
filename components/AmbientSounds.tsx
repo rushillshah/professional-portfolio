@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
-import { useCelestialPosition } from '@/hooks/celestialPosition';
+import { useCelestialPosition } from '../hooks/celestialPosition';
+import { getAudioURL } from '../utils/audio';
 
 interface Props {
   volume?: number;
@@ -138,8 +139,8 @@ const AmbientSounds: React.FC<Props> = ({ volume = 0.6, showSnow = false }) => {
   };
 
   useEffect(() => {
-    const birds = new Audio('/assets/birds.mp3');
-    const crickets = new Audio('/assets/crickets.mp3');
+    const birds = new Audio(getAudioURL('birds'));
+    const crickets = new Audio(getAudioURL('crickets'));
 
     [birds, crickets].forEach(a => {
       a.loop = true;

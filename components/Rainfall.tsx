@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Rain } from 'react-rainfall';
+import { getAudioURL } from '../utils/audio';
 
 interface RainEffectProps {
   height?: string;
@@ -54,8 +55,8 @@ const RainEffect: React.FC<RainEffectProps> = ({
   };
 
   useEffect(() => {
-    const rainAudio = new Audio('/assets/rain.mp3');
-    const thunderAudio = new Audio('/assets/thunder.mp3');
+    const rainAudio = new Audio(getAudioURL('rain'));
+    const thunderAudio = new Audio(getAudioURL('thunder'));
 
     rainAudio.preload = 'auto';
     thunderAudio.preload = 'auto';

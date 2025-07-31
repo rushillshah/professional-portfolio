@@ -1,19 +1,20 @@
 import React, { useEffect, useRef } from 'react';
 import ReactSnowfall from 'react-snowfall';
+import { getAudioURL } from '../utils/audio';
 
 interface Props {
   density?: number;
   color?: string;
   zIndex?: number;
-  volume?: number;     // 0..1
-  playing?: boolean;   // control audio explicitly; defaults to true
+  volume?: number;
+  playing?: boolean;
 }
 
 const Snowfall: React.FC<Props> = ({
   density = 160,
   color = '#ffffff',
   zIndex = 2,
-  volume = 0.9,
+  volume = 1,
   playing = true,
 }) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -22,7 +23,7 @@ const Snowfall: React.FC<Props> = ({
   const unlockCleanupRef = useRef<() => void>(() => {});
   const visCleanupRef = useRef<() => void>(() => {});
   const readyCleanupRef = useRef<() => void>(() => {});
-  const genRef = useRef(0); // increment to invalidate late async callbacks
+  const genRef = useRef(0);
 
   const clearRAF = () => {
     if (fadeRAFRef.current) {
@@ -34,15 +35,11 @@ const Snowfall: React.FC<Props> = ({
   const hardStop = () => {
     const a = audioRef.current;
     if (!a) return;
-    // invalidate any pending async handlers
     genRef.current += 1;
-    // remove listeners
     readyCleanupRef.current(); readyCleanupRef.current = () => {};
     unlockCleanupRef.current(); unlockCleanupRef.current = () => {};
     visCleanupRef.current(); visCleanupRef.current = () => {};
-    // kill any fades
     clearRAF();
-    // stop immediately
     try {
       a.pause();
       a.currentTime = 0;
@@ -56,7 +53,7 @@ const Snowfall: React.FC<Props> = ({
     clearRAF();
     const from = audio.volume;
     const start = performance.now();
-    const dur = 350; // snappier to avoid audible tails
+    const dur = 350; 
     const tick = (t: number) => {
       const p = Math.min(1, (t - start) / dur);
       const eased = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 1, 2) / 2;
@@ -79,12 +76,11 @@ const Snowfall: React.FC<Props> = ({
     const a = audioRef.current!;
     const thisGen = genRef.current;
 
-    // remove any previous readiness listener
     readyCleanupRef.current();
     a.oncanplaythrough = null;
 
     const onReady = () => {
-      if (thisGen !== genRef.current) return; // stale
+      if (thisGen !== genRef.current) return;
       a.play().catch(() => {});
       fadeTo(a, targetVol);
       startedRef.current = true;
@@ -102,10 +98,9 @@ const Snowfall: React.FC<Props> = ({
       };
       a.addEventListener('canplaythrough', listener, { once: true });
       readyCleanupRef.current = () => a.removeEventListener('canplaythrough', listener);
-      a.play().catch(() => {}); // prime decoder
+      a.play().catch(() => {});
     }
 
-    // Add unlock listeners only while trying to start
     const onInteract = () => {
       if (thisGen !== genRef.current) return;
       a.muted = false;
@@ -123,7 +118,6 @@ const Snowfall: React.FC<Props> = ({
       window.removeEventListener('keydown', onInteract);
     };
 
-    // Resume only if still playing == true when tab becomes visible
     const onVis = () => {
       if (document.visibilityState !== 'visible') return;
       if (thisGen !== genRef.current) return;
@@ -135,26 +129,24 @@ const Snowfall: React.FC<Props> = ({
   };
 
   useEffect(() => {
-    const a = new Audio('/assets/snowfall.mp3');
+   const a = new Audio(getAudioURL('snowfall'));
+
     a.loop = true;
     a.preload = 'auto';
-    a.muted = true;        // allow autoplay prime
+    a.muted = true;
     (a as any).playsInline = true;
     a.crossOrigin = 'anonymous';
     a.volume = 0;
 
     audioRef.current = a;
-    // Prime decoder (may be blocked; fine)
     a.play().catch(() => {});
 
     return () => {
       hardStop();
       audioRef.current = null;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Start/stop on playing flag
   useEffect(() => {
     const a = audioRef.current;
     if (!a) return;
@@ -164,10 +156,8 @@ const Snowfall: React.FC<Props> = ({
     } else {
       hardStop();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [playing]);
 
-  // Apply volume to active playback
   useEffect(() => {
     const a = audioRef.current;
     if (!a || !startedRef.current || !playing) return;
