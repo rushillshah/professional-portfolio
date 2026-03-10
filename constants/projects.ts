@@ -55,4 +55,12 @@ export const PROJECTS: Project[] = [
     link: 'https://www.npmjs.com/package/pgvector-rag',
     tools: ['TypeScript', 'PostgreSQL', 'pgvector', 'MMR', 'RRF'],
   },
+  {
+    title: 'kite-auto-login',
+    category: 'Open Source',
+    summary:
+      'Auth boilerplate for Zerodha Kite that handles one-time login and persistent session management, keeping trading apps connected without manual re-auth.',
+    link: 'https://www.npmjs.com/package/kite-auto-login',
+    tools: ['Node.js', 'Zerodha Kite', 'Puppeteer', 'npm'],
+  },
 ];
