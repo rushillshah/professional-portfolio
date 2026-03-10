@@ -140,6 +140,7 @@ const DevControls: React.FC<{
 
   const [open, setOpen] = useState(false);
   const bodyRef = useRef<HTMLDivElement | null>(null);
+  const dockRef = useRef<HTMLDivElement | null>(null);
 
   const syncBodyHeight = () => {
     const el = bodyRef.current; if (!el) return;
@@ -158,6 +159,16 @@ const DevControls: React.FC<{
     return () => window.removeEventListener('open-scene-controls', handler);
   }, []);
 
+  useEffect(() => {
+    if (!open) return;
+    const onTap = (e: TouchEvent) => {
+      if (dockRef.current?.contains(e.target as Node)) return;
+      setOpen(false);
+    };
+    document.addEventListener('touchstart', onTap, { passive: true });
+    return () => document.removeEventListener('touchstart', onTap);
+  }, [open]);
+
   const onEnter = () => setOpen(true);
   const setAutoTime = () => setManual(null);
   const setAutoWeather = () => setWeatherOverride(null);
@@ -174,7 +185,7 @@ const DevControls: React.FC<{
   const selected = (weatherOverride ?? currentWeather);
 
   return (
-    <Dock onMouseEnter={onEnter} onFocusCapture={() => setOpen(true)}>
+    <Dock ref={dockRef} onMouseEnter={onEnter} onFocusCapture={() => setOpen(true)}>
       <Panel day={day} open={open}>
         <PanelHead>
           <Gear aria-label="Open settings"><FiSettings /></Gear>

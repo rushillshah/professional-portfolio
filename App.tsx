@@ -243,6 +243,9 @@ const App: React.FC = () => {
   };
   const toggleOpen = () => { setOpen(prev => !prev); setPinned(false); };
 
+  const burgerRef = useRef<HTMLButtonElement>(null);
+  const sidebarRef = useRef<HTMLElement>(null);
+
   useEffect(() => {
     const onEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape') { setPinned(false); setOpen(false); }
@@ -250,6 +253,18 @@ const App: React.FC = () => {
     window.addEventListener('keydown', onEsc);
     return () => window.removeEventListener('keydown', onEsc);
   }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    const onTap = (e: TouchEvent) => {
+      const t = e.target as Node;
+      if (burgerRef.current?.contains(t) || sidebarRef.current?.contains(t)) return;
+      setPinned(false);
+      setOpen(false);
+    };
+    document.addEventListener('touchstart', onTap, { passive: true });
+    return () => document.removeEventListener('touchstart', onTap);
+  }, [open]);
 
   const day = timeOfDay === 'day';
 
@@ -267,6 +282,7 @@ const App: React.FC = () => {
       />
 
       <Burger
+        ref={burgerRef}
         day={day}
         open={open || pinned}
         onMouseEnter={!isTouchDevice ? openNow : undefined}
@@ -285,6 +301,7 @@ const App: React.FC = () => {
       </Burger>
 
       <Sidebar
+        ref={sidebarRef}
         day={day}
         open={open || pinned}
         onMouseEnter={!isTouchDevice ? openNow : undefined}
