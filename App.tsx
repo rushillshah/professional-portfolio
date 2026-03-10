@@ -192,8 +192,8 @@ const App: React.FC = () => {
   const sections = useRef([
     { id: 'hero',       label: 'Home' },
     { id: 'about',      label: 'About' },
-    { id: 'skills',     label: 'Skills' },
     { id: 'projects',   label: 'Projects' },
+    { id: 'skills',     label: 'Skills' },
     { id: 'interests',  label: 'Interests' },
     { id: 'contact',    label: 'Contact' },
   ]).current;
@@ -322,8 +322,8 @@ const App: React.FC = () => {
       <SnapContainer ref={containerRef}>
         <SnapSection id="hero"><HeroSection /><ScrollHint /><VolumeNudge /></SnapSection>
         <SnapSection id="about"><AboutSection /></SnapSection>
-        <SnapSection id="skills"><SkillsSection timeOfDay={timeOfDay} /></SnapSection>
         <SnapSection id="projects"><ProjectsSection /></SnapSection>
+        <SnapSection id="skills"><SkillsSection timeOfDay={timeOfDay} /></SnapSection>
         <SnapSection id="interests"><InterestsSection /></SnapSection>
         <SnapSection id="contact"><ContactSection /></SnapSection>
       </SnapContainer>

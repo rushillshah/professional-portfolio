@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useRef } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { motion } from 'framer-motion';
 import { GitHubIcon, LinkedInIcon } from './icons';
@@ -20,15 +20,15 @@ function getModeByHour(h: number): DayMode {
 
 const STATS = [
   { value: '300k+', label: 'PDF exports shipped', link: 'projects' },
-  { value: '3-4M', label: 'records synced across CRMs', link: 'projects' },
+  { value: '3M+', label: 'records synced across CRMs', link: 'projects' },
   { value: '1,455+', label: 'GitHub contributions since Jan', link: 'skills' },
   { value: '2', label: 'hackathons hosted', link: 'projects' },
 ];
 
 const TILES = [
   { id: 'about', icon: FiUser, label: 'About', teaser: 'Background & story' },
-  { id: 'skills', icon: FiCpu, label: 'Skills', teaser: 'Tech & tools' },
   { id: 'projects', icon: FiFolder, label: 'Projects', teaser: 'Things I shipped' },
+  { id: 'skills', icon: FiCpu, label: 'Skills', teaser: 'Tech & tools' },
   { id: 'interests', icon: FiHeart, label: 'Interests', teaser: 'Outside of work' },
   { id: 'contact', icon: FiMessageCircle, label: 'Contact', teaser: 'Get in touch' },
   { id: '__settings', icon: FiSliders, label: 'Settings', teaser: 'Weather & time' },
@@ -156,14 +156,37 @@ const Divider = styled.div<{ day: boolean }>`
   margin: 0.15rem 0;
 `;
 
+const marquee = keyframes`
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+`;
+
 const StatsRow = styled.div`
   display: flex;
   gap: 2.5rem;
   flex-wrap: wrap;
 
   @media (max-width: 767px) {
-    justify-content: center;
-    gap: 1.75rem;
+    flex-wrap: nowrap;
+    overflow: hidden;
+    gap: 0;
+    padding-bottom: 0.25rem;
+    justify-content: flex-start;
+  }
+`;
+
+const StatsTrack = styled.div`
+  display: none;
+
+  @media (max-width: 767px) {
+    display: flex;
+    gap: 1.5rem;
+    animation: ${marquee} 18s linear infinite;
+    will-change: transform;
+
+    &:hover {
+      animation-play-state: paused;
+    }
   }
 `;
 
@@ -179,9 +202,15 @@ const StatItem = styled.button`
   text-align: inherit;
   color: inherit;
   transition: transform 0.2s ease;
+  flex-shrink: 0;
+  white-space: nowrap;
 
   &:hover {
     transform: translateY(-1px);
+  }
+
+  @media (max-width: 767px) {
+    &.stats-desktop { display: none; }
   }
 `;
 
@@ -384,6 +413,7 @@ const HeroSection: React.FC<Props> = ({ mode }) => {
           {STATS.map((stat) => (
             <StatItem
               key={stat.label}
+              className="stats-desktop"
               onClick={() => {
                 const el = document.getElementById(stat.link);
                 if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -393,6 +423,20 @@ const HeroSection: React.FC<Props> = ({ mode }) => {
               <StatLabel>{stat.label}</StatLabel>
             </StatItem>
           ))}
+          <StatsTrack aria-hidden>
+            {[...STATS, ...STATS].map((stat, i) => (
+              <StatItem
+                key={`${stat.label}-${i}`}
+                onClick={() => {
+                  const el = document.getElementById(stat.link);
+                  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }}
+              >
+                <StatValue day={day}>{stat.value}</StatValue>
+                <StatLabel>{stat.label}</StatLabel>
+              </StatItem>
+            ))}
+          </StatsTrack>
         </StatsRow>
       </LeftZone>
 
