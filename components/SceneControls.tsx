@@ -44,7 +44,7 @@ const Gear = styled.button`
 `;
 
 const HeadTitle = styled.span`
-  font: 600 0.95rem/1 'Sono', sans-serif;
+  font: 600 0.95rem/1 'Quicksand', sans-serif;
   color: white;
   opacity: .9;
 `;
@@ -53,7 +53,7 @@ const Right = styled.div`display:flex;align-items:center;gap:.4rem;margin-right:
 
 const HeadHint = styled.button`
   appearance: none; border: 0; margin: 0;
-  font: 500 .8rem/1 'Sono', sans-serif;
+  font: 500 .8rem/1 'Quicksand', sans-serif;
   color: white;
   background: rgba(255,255,255,.12);
   border: 1px solid rgba(255,255,255,.12);
@@ -90,7 +90,7 @@ const Row = styled.div`
 `;
 
 const Label = styled.div`
-  font: 600 .85rem/1 'Sono', sans-serif;
+  font: 600 .85rem/1 'Quicksand', sans-serif;
   color: white; display: flex; align-items: center; justify-content: space-between;
 `;
 
@@ -124,7 +124,7 @@ const Chip = styled.button<{ active: boolean }>`
   &:hover{ transform: translateY(-1px); }
 `;
 
-type WeatherPick = 'rain' | 'snow' | 'clouds' | 'fall' | 'clear';
+type WeatherPick = 'rain' | 'snow' | 'clouds' | 'fall' | 'clear' | 'storm';
 
 
 const DevControls: React.FC<{
@@ -152,6 +152,12 @@ const DevControls: React.FC<{
     return () => ro.disconnect();
   }, [open]);
 
+  useEffect(() => {
+    const handler = () => setOpen(true);
+    window.addEventListener('open-scene-controls', handler);
+    return () => window.removeEventListener('open-scene-controls', handler);
+  }, []);
+
   const onEnter = () => setOpen(true);
   const setAutoTime = () => setManual(null);
   const setAutoWeather = () => setWeatherOverride(null);
@@ -159,6 +165,7 @@ const DevControls: React.FC<{
   const label = manual === null ? 'Auto' : `${manual.toFixed(2)} h`;
   const options: { key: WeatherPick; label: string; emoji: string }[] = [
     { key: 'rain',   label: 'Rain',   emoji: '🌧️' },
+    { key: 'storm',  label: 'Storm',  emoji: '⛈️' },
     { key: 'snow',   label: 'Snow',   emoji: '❄️' },
     { key: 'clouds', label: 'Clouds', emoji: '☁️' },
     { key: 'fall',   label: 'Fall',   emoji: '🍂' },

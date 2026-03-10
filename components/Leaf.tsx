@@ -139,11 +139,10 @@ const FallingLeaves: React.FC<Props> = ({ isFall = false }) => {
         const targetAV = Math.sin(t * m.sFreq + m.sPhase) * m.sAmp;
         const av = b.angularVelocity + (targetAV - b.angularVelocity) * 0.06;
         Matter.Body.setAngularVelocity(b, av);
-        if (isFall) {
-          const offY = b.position.y > window.innerHeight + 120;
-          const offX = b.position.x < -100 || b.position.x > window.innerWidth + 100;
-          if (offY || offX) resetBodyTop(b);
-        }
+        const offY = b.position.y > window.innerHeight + 120;
+        const offX = b.position.x < -100 || b.position.x > window.innerWidth + 100;
+        const settled = !isFall && Math.abs(b.velocity.y) < 0.05 && Math.abs(b.velocity.x) < 0.05 && b.position.y > window.innerHeight - 80;
+        if (offY || offX || settled) resetBodyTop(b);
       });
 
       const container = sceneRef.current;

@@ -4,14 +4,19 @@ import { getAudioURL } from '../utils/audio';
 
 interface Props {
   volume?: number;
-  showSnow?: boolean;
+  hasWeatherEffect?: boolean;
 }
 
-type Key = 'day' | 'night' | 'mute';
-
-const AmbientSounds: React.FC<Props> = ({ volume = 0.6, showSnow = false }) => {
+const AmbientSounds: React.FC<Props> = ({ volume = 0.6, hasWeatherEffect = false }) => {
   const { timeOfDay } = useCelestialPosition();
   const isNight = timeOfDay !== 'day';
+
+  const isNightRef = useRef(isNight);
+  const hasWeatherRef = useRef(hasWeatherEffect);
+  const volumeRef = useRef(volume);
+  isNightRef.current = isNight;
+  hasWeatherRef.current = hasWeatherEffect;
+  volumeRef.current = volume;
 
   const birdsRef = useRef<HTMLAudioElement | null>(null);
   const cricketsRef = useRef<HTMLAudioElement | null>(null);
@@ -25,7 +30,8 @@ const AmbientSounds: React.FC<Props> = ({ volume = 0.6, showSnow = false }) => {
   const birdsReadyCleanupRef = useRef<() => void>(() => {});
   const cricketsReadyCleanupRef = useRef<() => void>(() => {});
 
-  const currentKeyRef = useRef<Key | null>(null);
+  const birdsPlayingRef = useRef(false);
+  const cricketsPlayingRef = useRef(false);
 
   const clearRAF = (ref: React.MutableRefObject<number | null>) => {
     if (ref.current) {
@@ -109,33 +115,33 @@ const AmbientSounds: React.FC<Props> = ({ volume = 0.6, showSnow = false }) => {
     }
   };
 
-  const desiredKey = (): Key => {
-    if (isNight) return 'night';
-    if (showSnow) return 'mute'; 
-    return 'day';
-  };
-
   const applyDesired = () => {
-    const birds = birdsRef.current!;
-    const crickets = cricketsRef.current!;
-    const key = desiredKey();
+    const birds = birdsRef.current;
+    const crickets = cricketsRef.current;
+    if (!birds || !crickets) return;
 
-    switch (key) {
-      case 'day':
-        ensurePlay(birds, volume, birdsFadeRAF, birdsReadyCleanupRef);
-        stopNow(crickets, cricketsFadeRAF, cricketsReadyCleanupRef);
-        break;
-      case 'night':
-        ensurePlay(crickets, volume, cricketsFadeRAF, cricketsReadyCleanupRef);
-        stopNow(birds, birdsFadeRAF, birdsReadyCleanupRef);
-        break;
-      case 'mute':
-        stopNow(birds, birdsFadeRAF, birdsReadyCleanupRef);
-        stopNow(crickets, cricketsFadeRAF, cricketsReadyCleanupRef);
-        break;
+    const night = isNightRef.current;
+    const weather = hasWeatherRef.current;
+    const vol = volumeRef.current;
+
+    const wantBirds = !weather && !night;
+    const wantCrickets = !weather && night;
+
+    if (wantBirds && !birdsPlayingRef.current) {
+      ensurePlay(birds, vol, birdsFadeRAF, birdsReadyCleanupRef);
+      birdsPlayingRef.current = true;
+    } else if (!wantBirds && birdsPlayingRef.current) {
+      stopNow(birds, birdsFadeRAF, birdsReadyCleanupRef);
+      birdsPlayingRef.current = false;
     }
 
-    currentKeyRef.current = key;
+    if (wantCrickets && !cricketsPlayingRef.current) {
+      ensurePlay(crickets, vol, cricketsFadeRAF, cricketsReadyCleanupRef);
+      cricketsPlayingRef.current = true;
+    } else if (!wantCrickets && cricketsPlayingRef.current) {
+      stopNow(crickets, cricketsFadeRAF, cricketsReadyCleanupRef);
+      cricketsPlayingRef.current = false;
+    }
   };
 
   useEffect(() => {
@@ -155,26 +161,27 @@ const AmbientSounds: React.FC<Props> = ({ volume = 0.6, showSnow = false }) => {
     birdsRef.current = birds;
     cricketsRef.current = crickets;
 
-    const key = desiredKey();
-
     const tryImmediate = async () => {
+      const night = isNightRef.current;
+      const weather = hasWeatherRef.current;
+      const vol = volumeRef.current;
+      const wantBirds = !weather && !night;
+      const wantCrickets = !weather && night;
+
       try {
-        if (key === 'day') {
+        if (wantBirds) {
           birds.muted = false;
           await birds.play();
-          fadeTo(birds, volume, birdsFadeRAF);
-          stopNow(crickets, cricketsFadeRAF, cricketsReadyCleanupRef);
-        } else if (key === 'night') {
+          fadeTo(birds, vol, birdsFadeRAF);
+          birdsPlayingRef.current = true;
+        }
+        if (wantCrickets) {
           crickets.muted = false;
           await crickets.play();
-          fadeTo(crickets, volume, cricketsFadeRAF);
-          stopNow(birds, birdsFadeRAF, birdsReadyCleanupRef);
-        } else {
-          stopNow(birds, birdsFadeRAF, birdsReadyCleanupRef);
-          stopNow(crickets, cricketsFadeRAF, cricketsReadyCleanupRef);
+          fadeTo(crickets, vol, cricketsFadeRAF);
+          cricketsPlayingRef.current = true;
         }
         startedRef.current = true;
-        currentKeyRef.current = key;
       } catch {
         const onInteract = () => {
           startedRef.current = true;
@@ -198,11 +205,7 @@ const AmbientSounds: React.FC<Props> = ({ volume = 0.6, showSnow = false }) => {
 
     const onVis = () => {
       if (document.visibilityState !== 'visible') return;
-      if (!startedRef.current) applyDesired();
-      else {
-        birds.play().catch(() => {});
-        crickets.play().catch(() => {});
-      }
+      applyDesired();
     };
     document.addEventListener('visibilitychange', onVis);
 
@@ -220,17 +223,15 @@ const AmbientSounds: React.FC<Props> = ({ volume = 0.6, showSnow = false }) => {
 
   useEffect(() => {
     if (!startedRef.current) return;
-    const next = desiredKey();
-    if (currentKeyRef.current !== next) applyDesired();
-  }, [isNight, showSnow]);
+    applyDesired();
+  }, [isNight, hasWeatherEffect]);
 
   useEffect(() => {
     if (!startedRef.current) return;
-    const key = currentKeyRef.current;
     const birds = birdsRef.current!;
     const crickets = cricketsRef.current!;
-    if (key === 'day') fadeTo(birds, volume, birdsFadeRAF);
-    if (key === 'night') fadeTo(crickets, volume, cricketsFadeRAF);
+    if (birdsPlayingRef.current) fadeTo(birds, volume, birdsFadeRAF);
+    if (cricketsPlayingRef.current) fadeTo(crickets, volume, cricketsFadeRAF);
   }, [volume]);
 
   return null;

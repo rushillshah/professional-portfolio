@@ -18,14 +18,15 @@ import SkillsSection from './components/SkillsSection';
 import Snowfall from './components/Snowfall';
 import DevControls from './components/SceneControls';
 import ScrollHint from './components/ScrollHint';
+import VolumeNudge from './components/VolumeNudge';
 
-type WeatherPick = 'rain' | 'snow' | 'clouds' | 'fall' | 'clear';
+type WeatherPick = 'rain' | 'snow' | 'clouds' | 'fall' | 'clear' | 'storm';
 
 const GlobalStyle = createGlobalStyle<{ timeOfDay: TimeOfDay }>`
   body {
     background-color: ${p => (p.timeOfDay === 'day' ? '#fbf8f5' : '#0c0c2c')};
     transition: background-color 1.5s ease;
-    font-family: 'Sono', sans-serif;
+    font-family: 'Quicksand', 'Sono', sans-serif;
     margin: 0;
     overflow: hidden;
     overscroll-behavior-y: none;
@@ -53,9 +54,36 @@ const SnapSection = styled.section`
   flex-direction: column;
   justify-content: center;
   @media (min-width: 768px) {
-    height: 100vh;
+    min-height: 100vh;
     padding: 0;
     scroll-snap-align: start;
+  }
+`;
+
+const SplitRow = styled.div`
+  position: relative;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  width: 90%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+
+  @media (min-width: 768px) {
+    flex-direction: row;
+    gap: 1.25rem;
+    align-items: stretch;
+
+    & > * {
+      flex: 1;
+      min-width: 0;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    padding: 0 2rem;
   }
 `;
 
@@ -154,10 +182,10 @@ const App: React.FC = () => {
   }, [autoWeather, weatherOverride]);
 
   const showClouds = useMemo(
-    () => effectiveWeather === 'clouds' || effectiveWeather === 'rain' || effectiveWeather === 'snow',
+    () => effectiveWeather === 'clouds' || effectiveWeather === 'rain' || effectiveWeather === 'snow' || effectiveWeather === 'storm',
     [effectiveWeather]
   );
-  const showRain = effectiveWeather === 'rain';
+  const showRain = effectiveWeather === 'rain' || effectiveWeather === 'storm';
   const showSnow = effectiveWeather === 'snow';
   const showLeaves = effectiveWeather === 'fall' || (effectiveWeather === 'clear' && sessionRand.current < 0.4);
 
@@ -213,7 +241,7 @@ const App: React.FC = () => {
     if (hoverTimeout.current) window.clearTimeout(hoverTimeout.current);
     hoverTimeout.current = window.setTimeout(() => setOpen(false), 120);
   };
-  const togglePin = () => { setPinned(prev => !prev); setOpen(prev => !prev || !pinned); };
+  const toggleOpen = () => { setOpen(prev => !prev); setPinned(false); };
 
   useEffect(() => {
     const onEsc = (e: KeyboardEvent) => {
@@ -243,9 +271,9 @@ const App: React.FC = () => {
         open={open || pinned}
         onMouseEnter={!isTouchDevice ? openNow : undefined}
         onMouseLeave={!isTouchDevice ? closeSoon : undefined}
-        onClick={togglePin}
+        onClick={toggleOpen}
         aria-label={(open || pinned) ? 'Close navigation' : 'Open navigation'}
-        aria-pressed={pinned}
+        aria-pressed={false}
       >
         <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M4 7h16M4 12h16M4 17h16"
@@ -279,7 +307,7 @@ const App: React.FC = () => {
         </SideList>
       </Sidebar>
 
-      <AmbientSounds showSnow={showSnow} />
+      <AmbientSounds hasWeatherEffect={showRain || showSnow} />
       {showLeaves && <FallingLeaves isFall={effectiveWeather === 'fall'} />}
 
       <DynamicSky manualHour={manualHour} />
@@ -288,11 +316,11 @@ const App: React.FC = () => {
       <BranchHeader />
       {showRain && <RainEffect />}
       {showSnow && (
-        <Snowfall density={180} playing={effectiveWeather === 'snow'} />
+        <Snowfall density={180} volume={1.0} playing={effectiveWeather === 'snow'} />
       )}
 
       <SnapContainer ref={containerRef}>
-        <SnapSection id="hero"><HeroSection /><ScrollHint /></SnapSection>
+        <SnapSection id="hero"><HeroSection /><ScrollHint /><VolumeNudge /></SnapSection>
         <SnapSection id="about"><AboutSection /></SnapSection>
         <SnapSection id="skills"><SkillsSection timeOfDay={timeOfDay} /></SnapSection>
         <SnapSection id="projects"><ProjectsSection /></SnapSection>

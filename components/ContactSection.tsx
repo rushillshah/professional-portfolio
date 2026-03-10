@@ -1,289 +1,230 @@
-import React, { useMemo, useRef, useState, useCallback, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import styled from 'styled-components';
+import { motion } from 'framer-motion';
+import { FiExternalLink } from 'react-icons/fi';
+import { PROFESSIONAL, PERSONAL } from '@/constants/contact';
 import Section from './Section';
-import { FiArrowLeft, FiArrowRight } from 'react-icons/fi';
-import { PROFESSIONAL, SOCIAL } from '@/constants/contact';
 
 type DayMode = 'day' | 'night';
-type LinkItem = { name: string; desc: string; href: string; Icon: React.ElementType };
 
 function getModeByHour(h: number): DayMode {
   return h >= 6 && h < 18 ? 'day' : 'night';
 }
 
-const Shell = styled.div<{ day: boolean }>`
-  position: relative;
-  padding: 1.5rem;
-  background: rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 1rem;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  overflow: hidden;
-  z-index: 10;
+const Header = styled(motion.header)`
+  display: flex;
+  flex-direction: column;
+  width: fit-content;
+  margin: 0 0 1.5rem;
+  padding: 0.6rem 1.5rem;
+  background: rgba(0, 0, 0, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.85rem;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 `;
 
-const Header = styled.header`
-  text-align: center;
-  margin-bottom: 1.25rem;
-`;
-
-const Title = styled.h2<{ day: boolean }>`
-  position: relative;
-  display: inline-block;
+const Title = styled.h2<{ $day: boolean }>`
   margin: 0;
-  font-family: 'Sono', sans-serif;
-  font-size: clamp(2rem, 3.2vw, 2.5rem);
-  font-weight: 500;
+  font-family: 'Quicksand', sans-serif;
+  font-size: clamp(1.8rem, 3vw, 2.3rem);
+  font-weight: 400;
   color: white;
-`;
-
-const Ledger = styled.div<{ day: boolean }>`
-  position: relative;
-  display: grid;
-  gap: .75rem;
-  --glow: ${({ day }) => (day ? 'rgba(255,221,128,.18)' : 'rgba(124,58,237,.22)')};
-  border-radius: 16px;
-
-  &::before {
-    content: '';
-    position: absolute; inset: 0;
-    pointer-events: none;
-    background: radial-gradient(200px 200px at var(--mx, -200px) var(--my, -200px), var(--glow) 0%, transparent 60%);
-    transition: background 120ms ease;
-  }
-`;
-
-const Group = styled.div`
-  display: grid;
-  gap: .75rem;
-  background: rgba(0,0,0,.24);
-  border: 1px solid rgba(255,255,255,.12);
-  border-radius: 12px;
-  padding: 1.25rem;
-  backdrop-filter: blur(12px);
-  overflow: hidden;
-`;
-
-const GroupTitle = styled.h3<{ day: boolean; active: boolean }>`
-  margin: 0;
-  font-size: clamp(14px, 2vw, 16px);
-  font-weight: 500;
-  color: white;
-  position: relative;
   display: inline-block;
-  padding-bottom: 2px;
+  position: relative;
+  padding-bottom: 8px;
 
   &::after {
     content: '';
-    position: absolute; left: 0; right: 0; bottom: -4px; height: 2px;
-    background: ${({ day }) =>
-      day
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 2px;
+    width: 100%;
+    background: ${({ $day }) =>
+      $day
         ? 'linear-gradient(90deg,#ffdd80,#ff9f43)'
         : 'linear-gradient(90deg,#7c3aed,#6ee7ff)'};
     border-radius: 2px;
-    transform-origin: left;
-    transform: scaleX(${({ active }) => (active ? 1 : 0.10)});
-    opacity: ${({ active }) => (active ? 0.95 : 0.6)};
-    transition: transform .38s ease, opacity .38s ease;
+    opacity: 0.7;
   }
 `;
 
-const ChipsWrapper = styled.div`
+const Subtitle = styled.p`
+  margin: 0.3rem 0 0;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.5);
+`;
+
+const Grid = styled.div`
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.15rem;
+  }
+`;
+
+const Card = styled(motion.div)`
   position: relative;
-  min-width: 0;
-`;
-
-const Chips = styled.ul`
-  --row-h: 44px;
-  list-style: none;
-  margin: 0;
-  padding: .25rem 0;
   display: flex;
-  align-items: center;
-  flex-wrap: nowrap;
-  gap: .6rem;
-  min-height: calc(var(--row-h) + .5rem);
-  overflow-x: auto;
-  overflow-y: hidden;
-  -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.4rem 1.5rem;
+  border-radius: 0.85rem;
+  background: rgba(0, 0, 0, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #fff;
+  isolation: isolate;
+  overflow: hidden;
+  transition: box-shadow 0.25s ease, border-color 0.25s ease,
+    transform 0.25s ease, background 0.25s ease;
 
-  scrollbar-width: none;
-  &::-webkit-scrollbar { display: none; }
-`;
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    background: radial-gradient(
+      200px 200px at var(--mx, -200px) var(--my, -200px),
+      var(--glow) 0%,
+      transparent 62%
+    );
+    transition: background 120ms ease;
+    opacity: 0.9;
+  }
 
-const ScrollArrow = styled.button<{ show: boolean; direction: 'left' | 'right' }>`
-  position: absolute;
-  z-index: 2;
-  top: 50%;
-  transform: translateY(-50%) ${({ show }) => (show ? 'scale(1)' : 'scale(0.5)')};
-  ${({ direction }) => (direction === 'left' ? 'left: -22px;' : 'right: -22px;')}
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: rgba(0,0,0,0.45);
-  border: 1px solid rgba(255,255,255,0.1);
-  backdrop-filter: blur(4px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  cursor: pointer;
-  padding: 0;
-  opacity: ${({ show }) => (show ? 1 : 0)};
-  pointer-events: ${({ show }) => (show ? 'auto' : 'none')};
-  transition: all 0.25s ease;
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 3px;
+    background: linear-gradient(180deg, var(--accent-start), var(--accent-end));
+    border-radius: 3px 0 0 3px;
+    opacity: 0.5;
+    transition: opacity 0.25s ease;
+  }
 
   &:hover {
-    background: rgba(0,0,0,0.6);
-    transform: translateY(-50%) scale(1.05);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 255, 255, 0.18);
+    background: rgba(0, 0, 0, 0.48);
+
+    &::after {
+      opacity: 0.8;
+    }
   }
 `;
 
-const LinkChip = styled.a<{ day: boolean }>`
-  --desc-max: 0px;
-  --desc-opacity: 0;
+const GroupName = styled.h3`
+  margin: 0;
+  font-family: 'Quicksand', sans-serif;
+  font-size: clamp(1.05rem, 2vw, 1.2rem);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: #fff;
+  position: relative;
+  display: inline-block;
+  padding-bottom: 0.45rem;
 
-  flex-shrink: 0;
+  &::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent-start), var(--accent-end));
+    border-radius: 10px;
+    transform-origin: left;
+    transform: scaleX(0.25);
+    transition: transform 0.28s ease;
+    opacity: 0.8;
+  }
+
+  ${Card}:hover &::after {
+    transform: scaleX(1);
+  }
+`;
+
+const LinksWrap = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+`;
+
+const LinkTag = styled.a`
   display: inline-flex;
   align-items: center;
-  height: var(--row-h);
-  gap: .5rem;
-  padding: 0 .8rem;
-  font-size: 13px;
+  gap: 0.4rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+  font-size: 11px;
+  line-height: 1.2;
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   text-decoration: none;
-  color: white;
-  background: rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(255,255,255,.12);
-  border-radius: 12px;
-  backdrop-filter: blur(12px);
-  transition: transform .15s ease, background .15s ease, box-shadow .15s ease;
   white-space: nowrap;
-  outline: none;
+  transition: transform 0.15s ease, background 0.15s ease,
+    box-shadow 0.15s ease, color 0.15s ease;
+
+  svg {
+    width: 0.85rem;
+    height: 0.85rem;
+    opacity: 0.6;
+    flex-shrink: 0;
+  }
 
   &:hover,
   &:focus-visible {
     transform: translateY(-1px);
-    box-shadow: 0 6px 18px rgba(0,0,0,.18);
-    --desc-max: 420px;
-    --desc-opacity: 1;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
   }
-
-  svg { width: 1.1rem; height: 1.1rem; opacity: .9; }
 `;
 
-const Label = styled.span`
-  font-weight: 500;
-  letter-spacing: .01em;
+const LinkDetail = styled.span`
+  font-size: 10px;
+  opacity: 0.45;
 `;
 
-const Sep = styled.span`
-  opacity: .5;
-`;
-
-const Desc = styled.span`
-  max-width: var(--desc-max);
-  opacity: var(--desc-opacity);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  transition: max-width .25s ease, opacity .2s ease;
-`;
-
-interface ScrollingChipsProps {
-  items: LinkItem[];
-  day: boolean;
-}
-
-const ScrollingChips: React.FC<ScrollingChipsProps> = ({ items, day }) => {
-  const chipsRef = useRef<HTMLUListElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
-
-  const checkScrollability = useCallback(() => {
-    const el = chipsRef.current;
-    if (el) {
-      const hasOverflow = el.scrollWidth > el.clientWidth;
-      setCanScrollLeft(hasOverflow && el.scrollLeft > 5);
-      setCanScrollRight(hasOverflow && el.scrollLeft + el.clientWidth < el.scrollWidth - 5);
-    }
-  }, []);
-
-  useEffect(() => {
-    const element = chipsRef.current;
-    if (!element) return;
-    checkScrollability();
-    const resizeObserver = new ResizeObserver(checkScrollability);
-    resizeObserver.observe(element);
-    element.addEventListener('scroll', checkScrollability, { passive: true });
-    return () => {
-      resizeObserver.unobserve(element);
-      element.removeEventListener('scroll', checkScrollability);
-    };
-  }, [items, checkScrollability]);
-
-  const pan = (direction: 'left' | 'right') => {
-    const el = chipsRef.current;
-    if (el) {
-      const panAmount = el.clientWidth * 0.7;
-      el.scrollBy({ left: direction === 'left' ? -panAmount : panAmount, behavior: 'smooth' });
-    }
-  };
-
-  const handleChipHover = (e: React.MouseEvent<HTMLLIElement>) => {
-    const liElement = e.currentTarget;
-    const containerElement = chipsRef.current;
-    if (!liElement || !containerElement) return;
-
-    setTimeout(() => {
-      if (liElement.matches(':hover')) {
-        const chipRightEdge = liElement.offsetLeft + liElement.offsetWidth;
-        const containerVisibleRightEdge = containerElement.scrollLeft + containerElement.clientWidth;
-
-        if (chipRightEdge > containerVisibleRightEdge) {
-          const scrollAmount = chipRightEdge - containerVisibleRightEdge + 15;
-          containerElement.scrollBy({
-            left: scrollAmount,
-            behavior: 'smooth',
-          });
-        }
-      }
-    }, 260);
-  };
-
-  return (
-    <ChipsWrapper>
-      <ScrollArrow show={canScrollLeft} direction="left" onClick={() => pan('left')} aria-label="Scroll left">
-        <FiArrowLeft size={14} />
-      </ScrollArrow>
-      <Chips ref={chipsRef}>
-        {items.map((item) => (
-          <li key={item.name} onMouseEnter={handleChipHover}>
-            <LinkChip day={day} href={item.href} target='_blank' rel="noopener noreferrer">
-              <item.Icon />
-              <Label>{item.name}</Label>
-              <Sep>—</Sep>
-              <Desc>{item.desc}</Desc>
-            </LinkChip>
-          </li>
-        ))}
-      </Chips>
-      <ScrollArrow show={canScrollRight} direction="right" onClick={() => pan('right')} aria-label="Scroll right">
-        <FiArrowRight size={14} />
-      </ScrollArrow>
-    </ChipsWrapper>
-  );
-};
+const GROUPS = [
+  { title: 'Professional', items: PROFESSIONAL },
+  { title: 'Personal', items: PERSONAL },
+];
 
 const ContactSection: React.FC = () => {
   const mode = useMemo<DayMode>(() => getModeByHour(new Date().getHours()), []);
   const day = mode === 'day';
-  const ledgerRef = useRef<HTMLDivElement | null>(null);
-  const [activeGroup, setActiveGroup] = useState<number | null>(null);
 
-  const onMove: React.MouseEventHandler<HTMLDivElement> = (e) => {
-    const el = ledgerRef.current;
-    if (!el) return;
+  const accents = useMemo(
+    () =>
+      (day
+        ? {
+            '--accent-start': '#ffdd80',
+            '--accent-end': '#ff9f43',
+            '--glow': 'rgba(255,221,128,.15)',
+          }
+        : {
+            '--accent-start': '#7c3aed',
+            '--accent-end': '#6ee7ff',
+            '--glow': 'rgba(124,58,237,.18)',
+          }) as React.CSSProperties,
+    [day],
+  );
+
+  const onCardMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const el = e.currentTarget;
     const r = el.getBoundingClientRect();
     el.style.setProperty('--mx', `${e.clientX - r.left}px`);
     el.style.setProperty('--my', `${e.clientY - r.top}px`);
@@ -291,31 +232,50 @@ const ContactSection: React.FC = () => {
 
   return (
     <Section>
-      <Shell day={day}>
-        <Header>
-          <Title day={day}>Contact</Title>
-        </Header>
-        <Ledger ref={ledgerRef} day={day} onMouseMove={onMove}>
-          <Group
-            onMouseEnter={() => setActiveGroup(0)}
-            onMouseLeave={() => setActiveGroup(prev => (prev === 0 ? null : prev))}
-            onFocusCapture={() => setActiveGroup(0)}
-            onBlurCapture={() => setActiveGroup(prev => (prev === 0 ? null : prev))}
+      <Header
+        initial={{ opacity: 0, y: 16 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.4 }}
+      >
+        <Title $day={day}>Contact</Title>
+        <Subtitle>Get in touch</Subtitle>
+      </Header>
+
+      <Grid>
+        {GROUPS.map((group, i) => (
+          <Card
+            key={group.title}
+            style={accents}
+            onMouseMove={onCardMove}
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.15 }}
+            transition={{
+              duration: 0.45,
+              delay: i * 0.1,
+              ease: [0.25, 0.1, 0.25, 1],
+            }}
           >
-            <GroupTitle day={day} active={activeGroup === 0}>Professional</GroupTitle>
-            <ScrollingChips items={PROFESSIONAL} day={day} />
-          </Group>
-          <Group
-            onMouseEnter={() => setActiveGroup(1)}
-            onMouseLeave={() => setActiveGroup(prev => (prev === 1 ? null : prev))}
-            onFocusCapture={() => setActiveGroup(1)}
-            onBlurCapture={() => setActiveGroup(prev => (prev === 1 ? null : prev))}
-          >
-            <GroupTitle day={day} active={activeGroup === 1}>Socials</GroupTitle>
-            <ScrollingChips items={SOCIAL} day={day} />
-          </Group>
-        </Ledger>
-      </Shell>
+            <GroupName>{group.title}</GroupName>
+            <LinksWrap>
+              {group.items.map((item) => (
+                <LinkTag
+                  key={item.name}
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <item.Icon />
+                  {item.name}
+                  {item.desc && <LinkDetail>· {item.desc}</LinkDetail>}
+                  <FiExternalLink />
+                </LinkTag>
+              ))}
+            </LinksWrap>
+          </Card>
+        ))}
+      </Grid>
     </Section>
   );
 };

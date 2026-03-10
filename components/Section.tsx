@@ -6,6 +6,8 @@ interface SectionProps {
 }
 
 const SectionWrapper = styled.section`
+  position: relative;
+  z-index: 5;
   width: 100%;
   padding: 4rem 0;
   @media (min-width: 640px) {

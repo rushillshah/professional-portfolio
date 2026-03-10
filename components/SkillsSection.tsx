@@ -1,366 +1,254 @@
-import React, { useMemo, useRef, useState, useCallback, useEffect } from 'react';
-import { FiArrowRight, FiArrowLeft } from 'react-icons/fi';
+import React, { useMemo } from 'react';
 import styled from 'styled-components';
-
+import { motion } from 'framer-motion';
 import { TimeOfDay } from '../hooks/celestialPosition';
-
-
 import { SKILL_GROUPS } from '@/constants/skills';
+import Section from './Section';
 
-interface Props { timeOfDay: TimeOfDay }
-type Skill = { name: string; desc: string };
+interface Props {
+  timeOfDay: TimeOfDay;
+}
 
-const Section = styled.div<{ day:boolean }>`
-  width: 80%;
-  max-width: 1100px;
-  margin: 0 auto;
-  position: relative;
-  z-index: 3;
-  padding: 1.6rem 0 1rem;
-  border-radius: 1rem;
-  border: 1px solid rgba(255,255,255,.15);
-  backdrop-filter: blur(6px);
-   background: rgba(0, 0, 0, 0.5);
+const Header = styled(motion.header)`
+  display: flex;
+  flex-direction: column;
+  width: fit-content;
+  margin: 0 0 1.5rem;
+  padding: 0.6rem 1.5rem;
+  background: rgba(0, 0, 0, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.85rem;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 `;
 
-const Header = styled.header`
-  text-align:center;
-  margin-bottom: 1.25rem;
+const Subtitle = styled.p`
+  margin: 0.3rem 0 0;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.5);
 `;
 
-const Title = styled.h2`
-  position: relative;
-  display: inline-block;
+const Title = styled.h2<{ $day: boolean }>`
   margin: 0;
-  font-family:'Sono',sans-serif;
-  font-size: clamp(2rem,3.2vw,2.5rem);
-  font-weight: 500;
+  font-family: 'Quicksand', sans-serif;
+  font-size: clamp(1.8rem, 3vw, 2.3rem);
+  font-weight: 400;
   color: white;
-  padding-bottom: 6px;
-`;
-
-const Ledger = styled.div`
+  display: inline-block;
   position: relative;
-  display: grid;
-  gap: .75rem;
-  border-radius: 16px;
-  padding: clamp(1rem,3vw,2rem);
-  padding-top: 0;
-
-  &::before{
-    content:'';
-    position:absolute; inset:0;
-    pointer-events:none;
-    background: radial-gradient(
-      200px 200px at var(--mx,-200px) var(--my,-200px),
-      var(--glow) 0%,
-      transparent 60%
-    );
-    transition: background 120ms ease;
-  }
-`;
-
-const Group = styled.div`
-  display:grid;
-  gap:.75rem;
-  background:rgba(0,0,0,.24);
-  border-radius:12px;
-  padding:1.25rem;
-  backdrop-filter:blur(12px);
-  overflow: hidden;
-`;
-
-const GroupTitle = styled.h3<{ active:boolean }>`
-  margin:0;
-  font-size: clamp(14px,2vw,16px);
-  font-weight: 500;
-  color:white;
-  position:relative;
-  display:inline-block;
-  padding-bottom:2px;
+  padding-bottom: 8px;
 
   &::after {
     content: '';
-    position: absolute; left: 0; right: 0; bottom: -4px; height: 2px;
-    background: linear-gradient(90deg,var(--accent-start),var(--accent-end));
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 2px;
+    width: 100%;
+    background: ${({ $day }) =>
+      $day
+        ? 'linear-gradient(90deg,#ffdd80,#ff9f43)'
+        : 'linear-gradient(90deg,#7c3aed,#6ee7ff)'};
     border-radius: 2px;
-    transform-origin: left;
-    transform: scaleX(${({ active }) => (active ? 1 : 0.10)});
-    opacity: ${({ active }) => (active ? 0.95 : 0.6)};
-    transition: transform .38s ease, opacity .38s ease;
+    opacity: 0.7;
   }
 `;
 
-const ChipsWrapper = styled.div`
+const Grid = styled.div`
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.15rem;
+  }
+`;
+
+const Card = styled(motion.div)`
   position: relative;
-  min-width: 0;
-`;
-
-const Chips = styled.ul`
-  --row-h: 36px;
-  list-style:none; margin:0; padding: .25rem 0;
-  display:flex; align-items:center;
-  flex-wrap: nowrap;
-  gap:.5rem;
-  min-height: calc(var(--row-h) + .5rem);
-  overflow-x: auto; overflow-y: hidden;
-  -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth;
-
-  scrollbar-width: none;
-  &::-webkit-scrollbar { display: none; }
-`;
-
-const ScrollArrow = styled.button<{ show: boolean; direction: 'left' | 'right' }>`
-  position: absolute;
-  z-index: 2;
-  top: 50%;
-  transform: translateY(-50%) ${({ show }) => (show ? 'scale(1)' : 'scale(0.5)')};
-  ${({ direction }) => (direction === 'left' ? 'left: -22px;' : 'right: -22px;')}
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: rgba(0,0,0,0.45);
-  border: 1px solid rgba(255,255,255,0.1);
-  backdrop-filter: blur(4px);
   display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  cursor: pointer;
-  padding: 0;
-  opacity: ${({ show }) => (show ? 1 : 0)};
-  pointer-events: ${({ show }) => (show ? 'auto' : 'none')};
-  transition: all 0.25s ease;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.4rem 1.5rem;
+  border-radius: 0.85rem;
+  background: rgba(0, 0, 0, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #fff;
+  isolation: isolate;
+  overflow: hidden;
+  transition: box-shadow 0.25s ease, border-color 0.25s ease,
+    transform 0.25s ease, background 0.25s ease;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    background: radial-gradient(
+      200px 200px at var(--mx, -200px) var(--my, -200px),
+      var(--glow) 0%,
+      transparent 62%
+    );
+    transition: background 120ms ease;
+    opacity: 0.9;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 3px;
+    background: linear-gradient(
+      180deg,
+      var(--accent-start),
+      var(--accent-end)
+    );
+    border-radius: 3px 0 0 3px;
+    opacity: 0.5;
+    transition: opacity 0.25s ease;
+  }
 
   &:hover {
-    background: rgba(0,0,0,0.6);
-    transform: translateY(-50%) scale(1.05);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 255, 255, 0.18);
+    background: rgba(0, 0, 0, 0.48);
+
+    &::after {
+      opacity: 0.8;
+    }
   }
 `;
 
-const Chip = styled.li<{ day:boolean }>`
-  --desc-max: 0px;
-  --desc-opacity: 0;
-  position: relative; overflow: hidden;
+const GroupName = styled.h3`
+  margin: 0;
+  font-family: 'Quicksand', sans-serif;
+  font-size: clamp(1.05rem, 2vw, 1.2rem);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: #fff;
+  position: relative;
+  display: inline-block;
+  padding-bottom: 0.45rem;
 
-  display:inline-flex;
-  align-items:center;
-  flex-shrink: 0;
-  height: var(--row-h);
-  gap:.45rem;
-  padding: 0 .7rem;
-  font-size:12px;
-  color:white;
-  background: rgba(0, 0, 0, 0.5);
-  border:1px solid rgba(255,255,255,.12);
-  border-radius:10px;
-  backdrop-filter:blur(12px);
-  transition: transform .38s ease,background .38s ease,box-shadow .38s ease;
-  white-space:nowrap;
-  cursor:default;
-  outline:none;
-
-  &::before{
-    content:'';
-    position:absolute; inset:-2px;
-    pointer-events:none;
-    background: radial-gradient(
-      140px 100px at var(--cx,-50px) var(--cy,-50px),
-      var(--chip-glow) 0%,
-      transparent 60%
+  &::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 2px;
+    background: linear-gradient(
+      90deg,
+      var(--accent-start),
+      var(--accent-end)
     );
-    filter: blur(12px);
-    opacity: 0;
-    transition: opacity .18s ease;
+    border-radius: 10px;
+    transform-origin: left;
+    transform: scaleX(0.25);
+    transition: transform 0.28s ease;
+    opacity: 0.8;
   }
 
-  &:hover,&:focus{
-    transform:translateY(-1px);
-    box-shadow:0 6px 18px rgba(0,0,0,.18);
-    --desc-max: 420px;
-    --desc-opacity: 1;
+  ${Card}:hover &::after {
+    transform: scaleX(1);
   }
-
-  &:hover::before,&:focus::before{ opacity: 1; }
 `;
 
-const Label = styled.span` font-weight: 500; `;
-const Sep   = styled.span` opacity:.5; `;
-const Desc  = styled.span`
-  max-width: var(--desc-max);
-  opacity: var(--desc-opacity);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  transition: max-width .38s ease, opacity .38s ease;
+const TagsWrap = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
 `;
 
+const Tag = styled.span`
+  padding: 0.25rem 0.55rem;
+  border-radius: 6px;
+  font-size: 11px;
+  line-height: 1.2;
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  white-space: nowrap;
+`;
 
+const TagDetail = styled.span`
+  margin-left: 0.25rem;
+  font-size: 10px;
+  opacity: 0.45;
+`;
 
-interface ScrollingChipsProps {
-  skills: Skill[];
-  day: boolean;
-  onChipMove: React.MouseEventHandler<HTMLUListElement>;
-}
-
-const ScrollingChips: React.FC<ScrollingChipsProps> = ({ skills, day }) => {
-  const chipsRef = useRef<HTMLUListElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
-
-  const checkScrollability = useCallback(() => {
-    const el = chipsRef.current;
-    if (el) {
-      const hasOverflow = el.scrollWidth > el.clientWidth;
-      setCanScrollLeft(hasOverflow && el.scrollLeft > 5);
-      setCanScrollRight(hasOverflow && el.scrollLeft + el.clientWidth < el.scrollWidth - 5);
-    }
-  }, []);
-
-  useEffect(() => {
-    const element = chipsRef.current;
-    if (!element) return;
-    checkScrollability();
-    const resizeObserver = new ResizeObserver(checkScrollability);
-    resizeObserver.observe(element);
-    element.addEventListener('scroll', checkScrollability, { passive: true });
-
-    return () => {
-      resizeObserver.unobserve(element);
-      element.removeEventListener('scroll', checkScrollability);
-    };
-  }, [skills, checkScrollability]);
-
-  const pan = (direction: 'left' | 'right') => {
-    const el = chipsRef.current;
-    if (el) {
-      const panAmount = el.clientWidth * 0.7;
-      el.scrollBy({
-        left: direction === 'left' ? -panAmount : panAmount,
-        behavior: 'smooth',
-      });
-    }
-  };
-
-  const handleChipHover = (e: React.MouseEvent<HTMLLIElement>) => {
-    const liElement = e.currentTarget;
-    const containerElement = chipsRef.current;
-    if (!liElement || !containerElement) return;
-
-    setTimeout(() => {
-      if (liElement.matches(':hover')) {
-        const chipLeft = liElement.offsetLeft;
-        const chipRight = chipLeft + liElement.offsetWidth;
-        const containerScrollLeft = containerElement.scrollLeft;
-        const containerVisibleRight = containerScrollLeft + containerElement.clientWidth;
-
-        if (chipLeft < containerScrollLeft) {
-          containerElement.scrollTo({
-            left: chipLeft - 15,
-            behavior: 'smooth',
-          });
-        } else if (chipRight > containerVisibleRight) {
-          const scrollAmount = chipRight - containerVisibleRight + 15;
-          containerElement.scrollBy({
-            left: scrollAmount,
-            behavior: 'smooth',
-          });
-        }
-      }
-    }, 390);
-  };
-
-  return (
-    <ChipsWrapper>
-        <ScrollArrow show={canScrollLeft} direction="left" onClick={() => pan('left')} aria-label="Scroll left">
-          <FiArrowLeft size={14} />
-        </ScrollArrow>
-      <Chips ref={chipsRef}>
-        {skills.map(skill => (
-          <Chip
-            key={skill.name}
-            day={day}
-            data-chip
-            tabIndex={0}
-            aria-label={`${skill.name}: ${skill.desc}`}
-            onMouseEnter={handleChipHover}
-          >
-            <Label>{skill.name}</Label>
-            <Sep>—</Sep>
-            <Desc>{skill.desc}</Desc>
-          </Chip>
-        ))}
-      </Chips>
-      <ScrollArrow show={canScrollRight} direction="right" onClick={() => pan('right')} aria-label="Scroll right">
-        <FiArrowRight size={14}/>
-      </ScrollArrow>
-    </ChipsWrapper>
-  );
-};
-
-
-const SkillsSection:React.FC<Props> = ({ timeOfDay })=>{
-  const isDay = timeOfDay==='day';
-  const ledgerRef = useRef<HTMLDivElement|null>(null);
-  const [activeGroup,setActiveGroup] = useState<number|null>(null);
+const SkillsSection: React.FC<Props> = ({ timeOfDay }) => {
+  const isDay = timeOfDay === 'day';
 
   const accents = useMemo(
     () =>
       (isDay
         ? {
             '--accent-start': '#ffdd80',
-            '--accent-end':   '#ff9f43',
-            '--glow':         'rgba(255,221,128,.18)',
-            '--chip-glow':    'rgba(255,221,128,.30)',
+            '--accent-end': '#ff9f43',
+            '--glow': 'rgba(255,221,128,.15)',
           }
         : {
             '--accent-start': '#7c3aed',
-            '--accent-end':   '#6ee7ff',
-            '--glow':         'rgba(124,58,237,.22)',
-            '--chip-glow':    'rgba(124,58,237,.28)',
+            '--accent-end': '#6ee7ff',
+            '--glow': 'rgba(124,58,237,.18)',
           }) as React.CSSProperties,
-    [isDay]
+    [isDay],
   );
 
-  const handleMove:React.MouseEventHandler<HTMLDivElement> = e =>{
-    const el = ledgerRef.current;
-    if(!el) return;
+  const onCardMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const el = e.currentTarget;
     const r = el.getBoundingClientRect();
-    el.style.setProperty('--mx',`${e.clientX - r.left}px`);
-    el.style.setProperty('--my',`${e.clientY - r.top}px`);
+    el.style.setProperty('--mx', `${e.clientX - r.left}px`);
+    el.style.setProperty('--my', `${e.clientY - r.top}px`);
   };
 
-  const handleChipMove:React.MouseEventHandler<HTMLUListElement> = (e) => {
-    const target = (e.target as HTMLElement).closest('li[data-chip]') as HTMLElement | null;
-    if (!target) return;
-    const r = target.getBoundingClientRect();
-    target.style.setProperty('--cx', `${e.clientX - r.left}px`);
-    target.style.setProperty('--cy', `${e.clientY - r.top}px`);
-  };
-
-  return(
-    <Section id="skills" day={isDay} style={accents}>
-      <Header>
-        <Title>Skills</Title>
+  return (
+    <Section>
+      <Header
+        initial={{ opacity: 0, y: 16 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.4 }}
+      >
+        <Title $day={isDay}>Skills</Title>
+        <Subtitle>Things I'm good at</Subtitle>
       </Header>
 
-      <Ledger ref={ledgerRef} onMouseMove={handleMove}>
-        {SKILL_GROUPS.map((g,i)=>(
-          <Group key={g.title}
-            onMouseEnter={()=>setActiveGroup(i)}
-            onMouseLeave={()=>setActiveGroup(prev=>prev===i?null:prev)}
-            onFocusCapture={()=>setActiveGroup(i)}
-            onBlurCapture={()=>setActiveGroup(prev=>prev===i?null:prev)}
+      <Grid>
+        {SKILL_GROUPS.map((group, i) => (
+          <Card
+            key={group.title}
+            style={accents}
+            onMouseMove={onCardMove}
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.15 }}
+            transition={{
+              duration: 0.45,
+              delay: i * 0.1,
+              ease: [0.25, 0.1, 0.25, 1],
+            }}
           >
-            <GroupTitle active={activeGroup===i}>{g.title}</GroupTitle>
-            <ScrollingChips
-              skills={g.skills}
-              day={isDay}
-              onChipMove={handleChipMove}
-            />
-          </Group>
+            <GroupName>{group.title}</GroupName>
+            <TagsWrap>
+              {group.skills.map((skill) => (
+                <Tag key={skill.name}>
+                  {skill.name}
+                  {skill.desc && <TagDetail>· {skill.desc}</TagDetail>}
+                </Tag>
+              ))}
+            </TagsWrap>
+          </Card>
         ))}
-      </Ledger>
+      </Grid>
     </Section>
   );
 };
