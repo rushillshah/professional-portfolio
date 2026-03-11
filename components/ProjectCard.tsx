@@ -10,6 +10,8 @@ interface ProjectCardProps {
   category: string;
   summary: string;
   metric?: { value: string; label: string };
+  secondaryMetric?: { value: string; label: string };
+  badge?: string;
   linkUrl?: string;
   tools?: string[];
   mode?: DayMode;
@@ -34,7 +36,7 @@ const Card = styled(motion.div)<{ $day: boolean }>`
   transition: box-shadow 0.25s ease, border-color 0.25s ease, transform 0.25s ease,
     background 0.25s ease;
   isolation: isolate;
-  overflow: hidden;
+  overflow: visible;
 
   &::before {
     content: '';
@@ -159,6 +161,29 @@ const MetricLabel = styled.span`
   color: #fff;
 `;
 
+const MetricDivider = styled.span`
+  font-size: 0.8rem;
+  opacity: 0.3;
+  color: #fff;
+  margin: 0 0.15rem;
+`;
+
+const Badge = styled.span`
+  position: absolute;
+  top: 0;
+  right: -0.4rem;
+  transform: translateY(-50%);
+  padding: 0.2rem 0.55rem;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: linear-gradient(90deg, var(--accent-start), var(--accent-end));
+  color: #000;
+  z-index: 2;
+`;
+
 const ExpandIcon = styled.span<{ $expanded: boolean }>`
   display: flex;
   align-items: center;
@@ -258,6 +283,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   category,
   summary,
   metric,
+  secondaryMetric,
+  badge,
   linkUrl = '#',
   tools = [],
   mode = 'night',
@@ -318,6 +345,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
       viewport={{ once: true, amount: 0.15 }}
       transition={{ duration: 0.45, delay: index * 0.1, ease: [0.25, 0.1, 0.25, 1] }}
     >
+      {badge && <Badge>{badge}</Badge>}
       <TopRow>
         <TopLeft>
           <Category>{category}</Category>
@@ -329,6 +357,13 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
           <MetricInline>
             <MetricValue>{metric.value}</MetricValue>
             <MetricLabel>{metric.label}</MetricLabel>
+            {secondaryMetric && (
+              <>
+                <MetricDivider>·</MetricDivider>
+                <MetricValue>{secondaryMetric.value}</MetricValue>
+                <MetricLabel>{secondaryMetric.label}</MetricLabel>
+              </>
+            )}
           </MetricInline>
         )}
         <ExpandIcon $expanded={expanded}>

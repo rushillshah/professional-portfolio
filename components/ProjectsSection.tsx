@@ -105,6 +105,8 @@ const ProjectsSection: React.FC = () => {
             category={project.category}
             summary={project.summary}
             metric={project.metric}
+            secondaryMetric={project.secondaryMetric}
+            badge={project.badge}
             linkUrl={project.link}
             mode={mode}
             tools={project.tools}
